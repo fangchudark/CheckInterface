@@ -410,71 +410,66 @@ public partial class Main : Control
     }
 
 	/// <summary>
-	/// 检查给定 Script 是否实现了指定接口（包含所需方法）。
+	/// 检查给定 GDScript 是否实现了指定接口（包含所需方法）。
 	/// </summary>
-	/// <param name="script">待检查的 Script 实例</param>	
+	/// <param name="script">待检查的 GDScript 实例</param>	
 	/// <param name="interface">GDScript 所需方法签名列表</param>
 	/// <returns>如果脚本实现了接口（包含所有所需方法），返回 true，否则返回 false。</returns>
-	public static bool IsImplementedInterface(Script script, List<GDScriptMethodInfo> @interface)
+	public static bool IsImplementedInterface(GDScript script, List<GDScriptMethodInfo> @interface)
 	{
-		if (script is GDScript gdScript)
-		{			
-			// 获取方法列表
-			var methodInfo = gdScript.GetScriptMethodList();
+		// 获取方法列表
+		var methodInfo = script.GetScriptMethodList();
 
-			return @interface.All(req => methodInfo.Any(m =>
+		return @interface.All(req => methodInfo.Any(m =>
+			{
+				var name = m["name"].AsString();
+				var args = m["args"].AsGodotArray<Godot.Collections.Dictionary>();
+				var ret = m["return"].AsGodotDictionary();
+
+				// 检查方法名称是否匹配
+				var validNames = req.Aliases?.Append(req.Name) ?? [req.Name];
+				if (!validNames.Contains(name))
+					return false;
+
+				// 检查参数数量是否匹配
+				if (args.Count != req.ArgsCount)
+					return false;
+
+				// 检查参数类型和类名是否匹配
+				for (int i = 0; i < args.Count; i++)
 				{
-					var name = m["name"].AsString();
-					var args = m["args"].AsGodotArray<Godot.Collections.Dictionary>();
-					var ret = m["return"].AsGodotDictionary();
-
-					// 检查方法名称是否匹配
-					var validNames = req.Aliases?.Append(req.Name) ?? [req.Name];
-					if (!validNames.Contains(name))
+					if (args[i]["type"].As<Variant.Type>() != req.ArgsType[i] &&
+						args[i]["class_name"].AsStringName() != req.ArgsClassName[i])
 						return false;
 
-					// 检查参数数量是否匹配
-					if (args.Count != req.ArgsCount)
-						return false;
-
-					// 检查参数类型和类名是否匹配
-					for (int i = 0; i < args.Count; i++)
-					{
-						if (args[i]["type"].As<Variant.Type>() != req.ArgsType[i] &&
-							args[i]["class_name"].AsStringName() != req.ArgsClassName[i])
+					if (req.ArgsFlags?.Length > i && req.ArgsFlags[i] != (PropertyUsageFlags)(-1))
+						if ((args[i]["usage"].As<PropertyUsageFlags>() & req.ArgsFlags[i]) != req.ArgsFlags[i])
 							return false;
 
-						if (req.ArgsFlags?.Length > i && req.ArgsFlags[i] != (PropertyUsageFlags)(-1))
-							if ((args[i]["usage"].As<PropertyUsageFlags>() & req.ArgsFlags[i]) != req.ArgsFlags[i])
-								return false;
+					if (req.ArgsHints?.Length > i && req.ArgsHints[i] != (PropertyHint)(-1))
+						if (args[i]["hint"].As<PropertyHint>() != req.ArgsHints[i])
+							return false;
 
-						if (req.ArgsHints?.Length > i && req.ArgsHints[i] != (PropertyHint)(-1))
-							if (args[i]["hint"].As<PropertyHint>() != req.ArgsHints[i])
-								return false;
+					if (req.ArgsHintsStrings?.Length > i && !string.IsNullOrEmpty(req.ArgsHintsStrings[i]))
+						if (args[i]["hint_string"].AsString() != req.ArgsHintsStrings[i])
+							return false;
+				}
 
-						if (req.ArgsHintsStrings?.Length > i && !string.IsNullOrEmpty(req.ArgsHintsStrings[i]))
-							if (args[i]["hint_string"].AsString() != req.ArgsHintsStrings[i])
-								return false;
-					}
+				// 检查返回值类型和类名是否匹配
+				if (ret["type"].As<Variant.Type>() != req.ReturnType &&
+					ret["class_name"].AsStringName() != req.ReturnClassName)
+					return false;
 
-					// 检查返回值类型和类名是否匹配
-					if (ret["type"].As<Variant.Type>() != req.ReturnType &&
-						ret["class_name"].AsStringName() != req.ReturnClassName)
-						return false;
+				if (req.ReturnFlags != (PropertyUsageFlags)(-1) && (ret["usage"].As<PropertyUsageFlags>() & req.ReturnFlags) != req.ReturnFlags)
+					return false;
 
-					if (req.ReturnFlags != (PropertyUsageFlags)(-1) && (ret["usage"].As<PropertyUsageFlags>() & req.ReturnFlags) != req.ReturnFlags)
-						return false;
+				if (req.ReturnHint != (PropertyHint)(-1) && ret["hint"].As<PropertyHint>() != req.ReturnHint)
+					return false;
 
-					if (req.ReturnHint != (PropertyHint)(-1) && ret["hint"].As<PropertyHint>() != req.ReturnHint)
-						return false;
+				if (!string.IsNullOrEmpty(req.ReturnHintString) && ret["hint_string"].AsString() != req.ReturnHintString)
+					return false;
 
-					if (!string.IsNullOrEmpty(req.ReturnHintString) && ret["hint_string"].AsString() != req.ReturnHintString)
-						return false;
-
-					return true;
-                }));
-		}
-
-		return false;
+				return true;
+			}));
 	}
 }
