@@ -12,7 +12,9 @@ public partial class Main : Control
 
 		List<GDScriptMethodInfo> @interface = [
 			new("take_damage", 1, [""], [Variant.Type.Int], "", Variant.Type.Nil, ReturnFlags: PropertyUsageFlags.Default),
+			// GDScriptMethodInfo.VoidMethod("take_damage", 1, [""], [Variant.Type.Int]),
 			new("get_is_dead", 0, [], [], "", Variant.Type.Bool, ["@is_dead_getter"]),
+			// GDScriptMethodInfo.Getter("is_dead", "", Variant.Type.Bool)
 		];
 		
 		GD.Print(IsImplementedInterface(script, @interface));
@@ -105,7 +107,7 @@ public partial class Main : Control
 			int argsCount,
 			string[] argsClassName,
 			Variant.Type[] argsType,
-			string[] aliases,
+			string[] aliases = null,
 			PropertyUsageFlags[] argsFlags = null,
 			PropertyHint[] argsHints = null,
 			string[] argsHintsStrings = null
@@ -143,7 +145,7 @@ public partial class Main : Control
 			int argsCount,
 			string[] argsClassName,
 			Variant.Type[] argsType,
-			string[] aliases,
+			string[] aliases = null,
 			PropertyUsageFlags[] argsFlags = null,
 			PropertyHint[] argsHints = null,
 			string[] argsHintsStrings = null
