@@ -11,10 +11,25 @@ public partial class Main : Control
 		var script = GD.Load<GDScript>("res://enemy.gd");
 
 		List<GDScriptMethodInfo> @interface = [
-			new("take_damage", 1, [""], [Variant.Type.Int], "", Variant.Type.Nil, ReturnFlags: PropertyUsageFlags.Default),
 			// GDScriptMethodInfo.VoidMethod("take_damage", 1, [""], [Variant.Type.Int]),
-			new("get_is_dead", 0, [], [], "", Variant.Type.Bool, ["@is_dead_getter"]),
+			new(
+				Name: "take_damage",
+				ArgsCount: 1,
+				ArgsClassName: [""],
+				ArgsType: [Variant.Type.Int],
+				ReturnClassName: "",
+				ReturnType: Variant.Type.Nil,
+				ReturnFlags: PropertyUsageFlags.Default
+			),
 			// GDScriptMethodInfo.Getter("is_dead", "", Variant.Type.Bool)
+			new(
+				Name: "get_is_dead",
+				ArgsCount: 0,
+				ArgsClassName: [],
+				ArgsType: [],
+				ReturnClassName: "",
+				ReturnType: Variant.Type.Bool,
+				Aliases: ["@is_dead_getter"]),
 		];
 		
 		GD.Print(IsImplementedInterface(script, @interface));
